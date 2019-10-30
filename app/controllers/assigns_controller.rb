@@ -14,9 +14,12 @@ class AssignsController < ApplicationController
 
   def destroy
     assign = Assign.find(params[:id])
-    destroy_message = assign_destroy(assign, assign.user)
-
-    redirect_to team_url(params[:team_id]), notice: destroy_message
+    if current_user == assign.team.owner || current_user == assign.user
+      destroy_message = assign_destroy(assign, assign.user)
+      redirect_to team_url(params[:team_id]), notice: destroy_message
+    else
+      redirect_to team_url(params[:team_id]), notice: 'メンバーの削除はリーダーか本人しかできません'
+    end
   end
 
   private
@@ -35,13 +38,13 @@ class AssignsController < ApplicationController
       'メンバーを削除しました。'
     else
       'なんらかの原因で、削除できませんでした。'
-    end    
-  end  
-  
+    end
+  end
+
   def email_reliable?(address)
     address.match(/\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i)
   end
-  
+
   def set_next_team(assign, assigned_user)
     another_team = Assign.find_by(user_id: assigned_user.id).team
     change_keep_team(assigned_user, another_team) if assigned_user.keep_team_id == assign.team_id
