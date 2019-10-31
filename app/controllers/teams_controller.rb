@@ -1,6 +1,6 @@
 class TeamsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_team, only: %i[show edit update destroy]
+  before_action :set_team, only: %i[show edit update destroy update_owner]
 
   def index
     @teams = Team.all
@@ -38,6 +38,14 @@ class TeamsController < ApplicationController
     end
   end
 
+  def update_owner
+    @team.owner = User.find(params[:assign_user_id])
+    if @team.update(team_params)
+      redirect_to @team, notice: 'リーダー変更に成功しました！'
+      TeamMailer.team_mail(@team.owner).deliver
+    end
+  end
+
   def destroy
     @team.destroy
     redirect_to teams_url, notice: 'チーム削除に成功しました！'
@@ -54,6 +62,6 @@ class TeamsController < ApplicationController
   end
 
   def team_params
-    params.fetch(:team, {}).permit %i[name icon icon_cache owner_id keep_team_id]
+    params.fetch(:team, {}).permit %i[name icon icon_cache owner_id keep_team_id assign_user_id]
   end
 end
